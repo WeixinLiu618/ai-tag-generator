@@ -1,6 +1,6 @@
 // import ImageUpload from './components/ImageUpload';
 'use client'
-import ImageUpload from './components/ImageUpload3';
+import ImageUpload from './components/ImageUpload';
 import React, { useState } from 'react';
 
 

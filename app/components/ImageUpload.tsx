@@ -1,125 +1,53 @@
 'use client'
-import React from 'react'
-import { useState, useEffect } from "react";
-import UploadService from "../api/ImageUploadService";
+import React, { useCallback, useState } from 'react';
+import { useDropzone, FileWithPath } from 'react-dropzone';
 
-interface IFile {
-  url: string,
-  name: string,
+interface ImageUploadProps {
+  onImageStatusChange: (isUploaded: boolean, imageUrl: string | null) => void;
 }
 
-const ImageUpload: React.FC = () => {
-  const [currentImage, setCurrentImage] = useState<File>();
-  const [previewImage, setPreviewImage] = useState<string>("");
-  const [progress, setProgress] = useState<number>(0);
-  const [message, setMessage] = useState<string>("");
+const ImageUpload: React.FC<ImageUploadProps> = ({ onImageStatusChange }) => {
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  
+  const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
+    const file = acceptedFiles[0]; // Since we're expecting only one file
+    const imageURL = URL.createObjectURL(file);
+    setUploadedImage(imageURL);
+    onImageStatusChange(true, imageURL);
+  }, [onImageStatusChange]);
 
-  const [imageInfos, setImageInfos] = useState<Array<IFile>>([]);
-  const selectImage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files as FileList;
-    setCurrentImage(selectedFiles?.[0]);
-    setPreviewImage(URL.createObjectURL(selectedFiles?.[0]));
-    setProgress(0);
-  };
-  const upload = () => {
-    setProgress(0);
-    if (!currentImage) return;
-
-    UploadService.upload(currentImage, (event: any) => {
-      setProgress(Math.round((100 * event.loaded) / event.total));
-    })
-      .then((response) => {
-        setMessage(response.data.message);
-        return UploadService.getFiles();
-      })
-      .then((files) => {
-        setImageInfos(files.data);
-      })
-      .catch((err) => {
-        setProgress(0);
-
-        if (err.response && err.response.data && err.response.data.message) {
-          setMessage(err.response.data.message);
-        } else {
-          setMessage("Could not upload the Image!");
-        }
-
-        setCurrentImage(undefined);
-      });
-  };
-  useEffect(() => {
-    UploadService.getFiles().then((response) => {
-      setImageInfos(response.data);
-    });
-  }, []);
-
-
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+    },
+    maxSize: 10485760 // 10MB
+  });
 
   return (
-    <div>
-    <div className="row">
-      <div className="col-8">
-        <label className="btn btn-default p-0">
-          <input type="file" accept="image/*" onChange={selectImage} />
-        </label>
-      </div>
-
-      <div className="col-4">
-        <button
-          className="btn btn-success btn-sm"
-          disabled={!currentImage}
-          onClick={upload}
-        >
-          Upload
+    <div {...getRootProps()} className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center relative overflow-hidden cursor-pointer">
+      <input {...getInputProps()} />
+      {isDragActive ? (
+        <p>Drop the files here ...</p>
+      ) : (
+        <div>
+          <p>Click to select or drag and drop</p>
+          <p className='py-2'>JPG, WebP, GIF, PNG (max 10MB)</p>
+        </div>
+      )}
+      <div className='py-6'>
+        <button className="btn">
+            Upload Image
+            <img src="/cloud-upload-signal-svgrepo-com.svg" className="h-6 w-6" alt="upload" />
         </button>
       </div>
+      {uploadedImage && <img src={uploadedImage} alt="Preview" className="pt-4 w-full max-h-60 object-cover"/>}
+      
     </div>
+  );
+};
 
-    {currentImage && progress > 0 && (
-      <div className="progress my-3">
-        <div
-          className="progress-bar progress-bar-info"
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          style={{ width: progress + "%" }}
-        >
-          {progress}%
-        </div>
-      </div>
-    )}
-
-    {previewImage && (
-      <div>
-        <img className="preview" src={previewImage} alt="" />
-      </div>
-    )}
-
-    {message && (
-      <div className="alert alert-secondary mt-3" role="alert">
-        {message}
-      </div>
-    )}
-
-    {imageInfos.length > 0 && (
-      <div className="card mt-3">
-        <div className="card-header">List of Images</div>
-        <ul className="list-group list-group-flush">
-          {imageInfos.map((img, index) => (
-            <li className="list-group-item" key={index}>
-              <p>
-                <a href={img.url}>{img.name}</a>
-              </p>
-              <img src={img.url} alt={img.name} height="80px" />
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
-  )
-}
-
-export default ImageUpload
-
+export default ImageUpload;
