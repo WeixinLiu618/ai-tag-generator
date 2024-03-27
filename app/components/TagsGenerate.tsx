@@ -35,11 +35,11 @@ const TagsGenerate: React.FC<TagsGenerateProps> = ({ isImageUploaded , imageUrl 
           className={`btn btn-outline btn-accent ${!isImageUploaded || isProcessing ? 'btn-disabled' : ''}`}
           disabled={!isImageUploaded || isProcessing}
           onClick={handleButtonClick}>
-          {isProcessing ? 'Processing...' : 'Generate Alt Text'}
+          {isProcessing ? 'Processing...' : 'Generate Alt Tags'}
         </button>
         {altText && (
           <div className="mt-4 p-4 bg-blue-100 rounded-lg">
-            <p>Generated Alt Text: {altText}</p>
+            <p>Generated Alt Tags: {altText}</p>
           </div>
         )}
     </div>
