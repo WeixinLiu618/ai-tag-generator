@@ -1,5 +1,5 @@
 import React, { useState }  from 'react';
-import generateImageTags from "@/app/services/generateTags"
+import generateImageTags from "@/app/services/generateTagsAnthropic"
 
 
 interface TagsGenerateProps {
@@ -13,7 +13,7 @@ const TagsGenerate: React.FC<TagsGenerateProps> = ({ isImageUploaded , imageUrl 
   
   const handleButtonClick = () => {
     console.log("image url: ", imageUrl);
-    generateImageTags("https://res.cloudinary.com/dhwam0rpl/image/upload/v1711513380/kixtpkv3mrfvhrouvina.jpg")
+    generateImageTags(imageUrl)
       .then(tags => {
         setAltText(tags);
       })
@@ -21,7 +21,6 @@ const TagsGenerate: React.FC<TagsGenerateProps> = ({ isImageUploaded , imageUrl 
         console.error('Error generating tags:', error);
         setAltText('something error, no tags were generated');
       });
-    // generateTags1("https://res.cloudinary.com/dhwam0rpl/image/upload/v1711513380/kixtpkv3mrfvhrouvina.jpg")
   };
 
   return (

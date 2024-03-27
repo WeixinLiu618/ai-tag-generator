@@ -1,12 +1,23 @@
+'use server'
 import Anthropic from '@anthropic-ai/sdk';
+import fetch from 'node-fetch';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "fallback_api_key"
 });
 
+async function convertImageToBase64(imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return buffer.toString('base64');
+}
+
 
 async function generateImageTags(imageUrl: string | null): Promise<string> {
   if(!imageUrl) return "No image uploaded";
+
+  const base64Image = await convertImageToBase64(imageUrl);
 
   
   const msg = await anthropic.messages.create({
@@ -23,7 +34,7 @@ async function generateImageTags(imageUrl: string | null): Promise<string> {
             source: {
               type: 'base64',
               media_type: 'image/jpeg',
-              data: imageUrl,
+              data: base64Image
             },
           },
         ],
@@ -31,8 +42,6 @@ async function generateImageTags(imageUrl: string | null): Promise<string> {
     ],
   });
 
-  // Assuming the tags are returned in the 'text' field of the response
-  // You might need to adjust this based on the actual structure of the response
   return msg?.content?.[0]?.text || 'No tags generated';
 }
 
