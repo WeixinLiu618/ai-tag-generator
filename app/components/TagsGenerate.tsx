@@ -10,16 +10,21 @@ interface TagsGenerateProps {
 const TagsGenerate: React.FC<TagsGenerateProps> = ({ isImageUploaded , imageUrl }) => {
 
   const [altText, setAltText] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
   
   const handleButtonClick = () => {
     console.log("image url: ", imageUrl);
+    setIsProcessing(true); // Start processing
     generateImageTags(imageUrl)
       .then(tags => {
         setAltText(tags);
+        setIsProcessing(false); // Done processing
       })
       .catch(error => {
         console.error('Error generating tags:', error);
         setAltText('something error, no tags were generated');
+        setIsProcessing(false); // Done processing with error
       });
   };
 
@@ -27,19 +32,16 @@ const TagsGenerate: React.FC<TagsGenerateProps> = ({ isImageUploaded , imageUrl 
      <div className='flex flex-col items-center'>
     
         <button 
-          className={`btn btn-outline btn-accent ${!isImageUploaded ? 'btn-disabled' : ''}`}
-          disabled={!isImageUploaded}
+          className={`btn btn-outline btn-accent ${!isImageUploaded || isProcessing ? 'btn-disabled' : ''}`}
+          disabled={!isImageUploaded || isProcessing}
           onClick={handleButtonClick}>
-          Generate Alt Text
+          {isProcessing ? 'Processing...' : 'Generate Alt Text'}
         </button>
         {altText && (
           <div className="mt-4 p-4 bg-blue-100 rounded-lg">
             <p>Generated Alt Text: {altText}</p>
           </div>
         )}
-
-
-  
     </div>
   );
 };

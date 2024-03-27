@@ -18,7 +18,6 @@ async function generateImageTags(imageUrl: string | null): Promise<string> {
   if(!imageUrl) return "No image uploaded";
 
   const base64Image = await convertImageToBase64(imageUrl);
-
   
   const msg = await anthropic.messages.create({
     model: 'claude-3-haiku-20240307',
