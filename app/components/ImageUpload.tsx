@@ -1,5 +1,4 @@
-'use client'
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { useDropzone, FileWithPath } from 'react-dropzone';
 
 interface ImageUploadProps {
@@ -8,14 +7,36 @@ interface ImageUploadProps {
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onImageStatusChange }) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadToCloudinary = (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!); // Replace with your upload preset
+    formData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!); // Replace with your cloud name
+
+    fetch(`https://api.cloudinary.com/v1_1/${formData.get('cloud_name')}/image/upload`, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data.secure_url)
+      setUploadedImage(data.secure_url); // Use the secure URL for the uploaded image
+      onImageStatusChange(true, data.secure_url);
+    })
+    .catch(err => console.error('Error uploading image:', err));
+  };
   
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     const file = acceptedFiles[0]; // Since we're expecting only one file
-    const imageURL = URL.createObjectURL(file);
-    setUploadedImage(imageURL);
-    onImageStatusChange(true, imageURL);
+    uploadToCloudinary(file);
+
   }, [onImageStatusChange]);
 
+  const onButtonClick = () => {
+    fileInputRef.current?.click();
+  };
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -39,7 +60,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageStatusChange }) => {
         </div>
       )}
       <div className='py-6'>
-        <button className="btn">
+        <button className="btn" onClick={onButtonClick}>
             Upload Image
             <img src="/cloud-upload-signal-svgrepo-com.svg" className="h-6 w-6" alt="upload" />
         </button>
